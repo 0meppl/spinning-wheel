@@ -111,6 +111,32 @@ body {
   box-shadow: 0 0 12px rgba(82, 39, 255, 0.3);
 }
 
+.shareBtn {
+  margin-top: 8px;
+  padding: 8px 16px;
+  background: rgba(236, 72, 153, 0.1);
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  border-radius: 6px;
+  color: rgba(236, 72, 153, 0.8);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shareBtn:hover {
+  background: rgba(236, 72, 153, 0.2);
+  color: rgba(236, 72, 153, 1);
+  border-color: rgba(236, 72, 153, 0.5);
+}
+
+.shareBtn:active {
+  background: rgba(236, 72, 153, 0.3);
+  color: white;
+  border-color: rgb(236, 72, 153);
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.2);
+}
+
 /* CHANGELOG */
 .changelog {
   padding: 16px;

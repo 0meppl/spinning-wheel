@@ -5,6 +5,7 @@ import { useState } from "react";
 
 export default function App() {
   const [mode, setMode] = useState("standard");
+  const [shareEntries, setShareEntries] = useState(false);
   const modes = ["standard", "transparent", "neon", "minimal", "abgedeckt"];
 
   return (
@@ -55,10 +56,18 @@ export default function App() {
                 </button>
               ))}
             </div>
+            
+            <button 
+              className="shareBtn"
+              onClick={() => setShareEntries(!shareEntries)}
+              title={shareEntries ? "Einträge sind geteilt" : "Jedes Design hat eigene Einträge"}
+            >
+              {shareEntries ? "🔗 Einträge geteilt" : "📋 Separate Einträge"}
+            </button>
           </div>
 
           <div className="wheelBox">
-            <Glücksrad mode={mode} />
+            <Glücksrad mode={mode} shareEntries={shareEntries} />
           </div>
 
           {/* CHANGELOG */}

@@ -12,8 +12,8 @@ const REVEAL_COLORS = ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb718
 
 const DEFAULT_ENTRIES = ["Gewinnen", "Verlieren", "Nochmal"];
 
-export default function Glücksrad({ mode = "standard" }) {
-  const storageKey = `gluecksrad-entries-${mode}`;
+export default function Glücksrad({ mode = "standard", shareEntries = false }) {
+  const storageKey = shareEntries ? "gluecksrad-entries-shared" : `gluecksrad-entries-${mode}`;
 
   const [entries, setEntries] = useState(() => {
     try {
@@ -23,6 +23,16 @@ export default function Glücksrad({ mode = "standard" }) {
       return DEFAULT_ENTRIES;
     }
   });
+  
+  // Reload entries when mode or shareEntries changes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      setEntries(saved ? JSON.parse(saved) : DEFAULT_ENTRIES);
+    } catch {
+      setEntries(DEFAULT_ENTRIES);
+    }
+  }, [mode, shareEntries, storageKey]);
   const [input, setInput]         = useState("");
   const [rotation, setRotation]   = useState(0);
   const [spinning, setSpinning]   = useState(false);
