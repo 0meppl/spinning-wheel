@@ -10,19 +10,7 @@ const MODE_COLORS = {
 };
 const REVEAL_COLORS = ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"];
 
-export default function Glücksrad({ mode = "standard", onWinner }) {
-  const storageKey = `gluecksrad-${mode}`;
-  
-  const [entries, setEntries] = useState(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-  
-  const [input, setInput] = useState("");
+export default function Glücksrad({ mode = "standard", entries = [], onWinner }) {
   const [rotation, setRotation]   = useState(0);
   const [spinning, setSpinning]   = useState(false);
   const [winner, setWinner]       = useState(null);
@@ -30,23 +18,6 @@ export default function Glücksrad({ mode = "standard", onWinner }) {
   const [revealed, setRevealed]   = useState(false);
 
   const canvasRef = useRef(null);
-
-  // Speichere Einträge
-  useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(entries)); } catch {}
-  }, [entries, storageKey]);
-
-  const addEntry = () => {
-    const value = input.trim();
-    if (!value) return;
-    setEntries((prev) => [...prev, value]);
-    setInput("");
-  };
-
-  const removeEntry = (index) => {
-    setEntries((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const closeModal  = () => setModalOpen(false);
 
   const spin = () => {
@@ -74,7 +45,8 @@ export default function Glücksrad({ mode = "standard", onWinner }) {
       const segment      = 360 / entries.length;
       const pointerAngle = ((270 - normalized) % 360 + 360) % 360;
       const index        = Math.floor(pointerAngle / segment) % entries.length;
-      const won          = entries[index];
+      const entryObj     = entries[index];
+      const won          = typeof entryObj === 'string' ? entryObj : entryObj?.text;
 
       setWinner(won);
       setRevealed(true);
@@ -115,6 +87,7 @@ export default function Glücksrad({ mode = "standard", onWinner }) {
     const angle = (Math.PI * 2) / entries.length;
 
     entries.forEach((entry, i) => {
+      const text = typeof entry === 'string' ? entry : entry?.text;
       const start = i * angle + (rotation * Math.PI) / 180;
       const end   = start + angle;
 
@@ -142,13 +115,13 @@ export default function Glücksrad({ mode = "standard", onWinner }) {
         ctx.fillStyle  = mode === "neon" ? "#000" : "rgba(255,255,255,0.92)";
         ctx.font       = "600 13px Inter, system-ui, sans-serif";
         ctx.textAlign  = flip ? "left" : "right";
-        const text     = entry.length > 14 ? entry.slice(0, 14) + "…" : entry;
-        ctx.fillText(text, flip ? -(radius - 14) : radius - 14, 5);
+        const displayText     = text.length > 14 ? text.slice(0, 14) + "…" : text;
+        ctx.fillText(displayText, flip ? -(radius - 14) : radius - 14, 5);
         ctx.restore();
       }
     });
 
-    // Hub – größer wenn Gewinner angezeigt wird
+    // Hub
     const hubR = winner && !spinning ? 52 : 14;
     ctx.beginPath();
     ctx.arc(center, center, hubR, 0, Math.PI * 2);
@@ -158,7 +131,7 @@ export default function Glücksrad({ mode = "standard", onWinner }) {
     ctx.lineWidth   = 1.5;
     ctx.stroke();
 
-    // Gewinner-Text im Mittelpunkt
+    // Winner text
     if (winner && !spinning) {
       ctx.textAlign    = "center";
       ctx.textBaseline = "middle";
@@ -177,52 +150,15 @@ export default function Glücksrad({ mode = "standard", onWinner }) {
     }
   }, [entries, rotation, winner, spinning, revealed, mode]);
 
-  const dotColors = MODE_COLORS[mode] ?? MODE_COLORS.standard;
-
   return (
-    <div className="rad">
-      {/* LEFT - ENTRIES */}
-      <div className="entriesPanel">
-        <span className="panelLabel">Einträge</span>
-
-        <div className="inputRow">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addEntry()}
-            placeholder="Neuer Eintrag"
-          />
-          <button onClick={addEntry}>+</button>
-        </div>
-
-        {entries.length === 0 ? (
-          <div className="empty">Noch keine Einträge vorhanden.</div>
-        ) : (
-          <ul className="list">
-            {entries.map((entry, i) => (
-              <li className="item" key={`${entry}-${i}`}>
-                <span className="dot" style={{ background: dotColors[i % dotColors.length] }} />
-                <span className="itemText">{entry}</span>
-                <button 
-                  className="removeBtn"
-                  onClick={() => removeEntry(i)}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* CENTER - WHEEL */}
+    <div className="wheelContainer">
       <div className="wheelPanel">
         <div className="wheelWrapper">
           <div className="pointer" />
           <canvas
             ref={canvasRef}
-            width={340}
-            height={340}
+            width={380}
+            height={380}
             onClick={spin}
             className={spinning ? "" : "clickable"}
           />
@@ -233,20 +169,16 @@ export default function Glücksrad({ mode = "standard", onWinner }) {
           onClick={spin}
           disabled={spinning || entries.length === 0}
         >
-          {spinning ? "läuft" : "drehen"}
+          {spinning ? "läuft..." : "🎡 Drehen"}
         </button>
       </div>
 
-      {/* RIGHT - EMPTY */}
-      <div className="rightPlaceholder"></div>
-
-      {/* MODAL */}
       {modalOpen && (
         <div className="modalOverlay" onClick={closeModal}>
           <div className="modalBox" onClick={(e) => e.stopPropagation()}>
-            <span className="modalLabel">Ergebnis</span>
+            <span className="modalLabel">🎉 Ergebnis</span>
             <span className="modalWinner">{winner}</span>
-            <button className="modalOk" onClick={closeModal}>Ok</button>
+            <button className="modalOk" onClick={closeModal}>Okay</button>
           </div>
         </div>
       )}
