@@ -4,8 +4,10 @@ import Grainient from "./Grainient";
 import { useState } from "react";
 
 export default function App() {
-  const [entries, setEntries] = useState(["Gewinnen", "Verlieren", "Nochmal"]);
+  const [sharedEntries, setSharedEntries] = useState(false);
   const [winners, setWinners] = useState({});
+  const [input, setInput] = useState("");
+  const [globalEntries, setGlobalEntries] = useState([]);
   const modes = ["standard", "transparent", "neon", "minimal", "abgedeckt"];
 
   const updateWinner = (mode, winner) => {
@@ -13,6 +15,17 @@ export default function App() {
       ...prev,
       [mode]: winner,
     }));
+  };
+
+  const addEntry = () => {
+    const value = input.trim();
+    if (!value) return;
+    setGlobalEntries((prev) => [...prev, value]);
+    setInput("");
+  };
+
+  const removeEntry = (index) => {
+    setGlobalEntries((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -34,7 +47,7 @@ export default function App() {
         />
       </div>
 
-      {/* CONTENT GRID */}
+      {/* CONTENT */}
       <div className="layout">
 
         {/* LEFT - CONTROLS */}
@@ -49,52 +62,48 @@ export default function App() {
             <div className="subtitle">Einträge hinzufügen & drehen</div>
           </MagicBento>
 
+          {/* SHARE TOGGLE */}
+          <button 
+            className={`shareToggle ${sharedEntries ? "active" : ""}`}
+            onClick={() => setSharedEntries(!sharedEntries)}
+          >
+            {sharedEntries ? "🔗 Einträge geteilt" : "📋 Separate Einträge"}
+          </button>
+
           {/* ENTRIES PANEL */}
-          <div className="entriesPanel">
-            <span className="panelLabel">Einträge (für alle Räder)</span>
+          {sharedEntries && (
+            <div className="entriesPanel">
+              <span className="panelLabel">Einträge (für alle Räder)</span>
 
-            <div className="inputRow">
-              <input
-                id="entryInput"
-                placeholder="Neuer Eintrag"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const value = e.target.value.trim();
-                    if (value) {
-                      setEntries((prev) => [...prev, value]);
-                      e.target.value = "";
-                    }
-                  }
-                }}
-              />
-              <button onClick={() => {
-                const input = document.getElementById("entryInput");
-                const value = input.value.trim();
-                if (value) {
-                  setEntries((prev) => [...prev, value]);
-                  input.value = "";
-                }
-              }}>Hinzufügen</button>
+              <div className="inputRow">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addEntry()}
+                  placeholder="Neuer Eintrag"
+                />
+                <button onClick={addEntry}>+</button>
+              </div>
+
+              {globalEntries.length === 0 ? (
+                <div className="empty">Noch keine Einträge vorhanden.</div>
+              ) : (
+                <ul className="list">
+                  {globalEntries.map((entry, i) => (
+                    <li className="item" key={`${entry}-${i}`}>
+                      <span className="itemText">{entry}</span>
+                      <button 
+                        className="removeBtn"
+                        onClick={() => removeEntry(i)}
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-
-            {entries.length === 0 ? (
-              <div className="empty">Noch keine Einträge vorhanden.</div>
-            ) : (
-              <ul className="list">
-                {entries.map((entry, i) => (
-                  <li className="item" key={`${entry}-${i}`}>
-                    <span className="itemText">{entry}</span>
-                    <button 
-                      className="removeBtn"
-                      onClick={() => setEntries((prev) => prev.filter((_, idx) => idx !== i))}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          )}
 
           {/* WINNERS */}
           {Object.keys(winners).length > 0 && (
@@ -119,7 +128,8 @@ export default function App() {
               <Glücksrad 
                 key={mode}
                 mode={mode}
-                entries={entries}
+                sharedEntries={sharedEntries}
+                globalEntries={globalEntries}
                 onWinner={(winner) => updateWinner(mode, winner)}
               />
             ))}

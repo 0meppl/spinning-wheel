@@ -191,6 +191,32 @@ body {
   color: rgb(82, 39, 255);
 }
 
+.shareToggle {
+  padding: 12px 16px;
+  background: rgba(82, 39, 255, 0.15);
+  border: 1px solid rgba(82, 39, 255, 0.3);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.shareToggle:hover {
+  background: rgba(82, 39, 255, 0.2);
+  color: white;
+  border-color: rgba(82, 39, 255, 0.5);
+}
+
+.shareToggle.active {
+  background: rgba(82, 39, 255, 0.3);
+  border-color: rgb(82, 39, 255);
+  color: white;
+  box-shadow: 0 0 12px rgba(82, 39, 255, 0.2);
+}
+
 /* ENTRIES PANEL */
 .entriesPanel {
   padding: 16px;

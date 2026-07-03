@@ -10,16 +10,27 @@ const MODE_COLORS = {
 };
 const REVEAL_COLORS = ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"];
 
-export default function Glücksrad({ mode = "standard", entries = [], onWinner }) {
-  const [rotation, setRotation]   = useState(0);
-  const [spinning, setSpinning]   = useState(false);
-  const [winner, setWinner]       = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [revealed, setRevealed]   = useState(false);
+export default function Glücksrad({ mode = "standard", sharedEntries = false, globalEntries = [], onWinner }) {
+  const storageKey = `gluecksrad-${mode}`;
+  
+  const [localEntries, setLocalEntries] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
-  const canvasRef = useRef(null);
+  // Nutze globalEntries wenn geteilt, sonst lokalentries
+  const entries = sharedEntries ? globalEntries : localEntries;
 
-  const closeModal  = () => setModalOpen(false);
+  // Speichere lokale Einträge
+  useEffect(() => {
+    if (!sharedEntries) {
+      try { localStorage.setItem(storageKey, JSON.stringify(localEntries)); } catch {}
+    }
+  }, [localEntries, sharedEntries, storageKey]);
 
   const spin = () => {
     if (spinning || entries.length === 0) return;
