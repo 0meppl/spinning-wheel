@@ -24,19 +24,30 @@ body {
   z-index: 2;
 
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 40px;
+  align-items: start;
+  justify-items: center;
   padding: 40px;
 }
 
-/* LEFT COLUMN */
+/* LEFT - CONTROLS */
 .left {
   width: 100%;
-  max-width: 900px;
+  max-width: 400px;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 20px;
+  position: sticky;
+  top: 40px;
+}
+
+/* RIGHT - WHEELS */
+.right {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* Title */
@@ -178,4 +189,174 @@ body {
   position: absolute;
   left: -8px;
   color: rgb(82, 39, 255);
+}
+
+/* ENTRIES PANEL */
+.entriesPanel {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.panelLabel {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.inputRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.inputRow input {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-size: 13px;
+}
+
+.inputRow input::placeholder {
+  opacity: 0.5;
+}
+
+.inputRow button {
+  padding: 8px 16px;
+  background: rgba(82, 39, 255, 0.2);
+  border: 1px solid rgba(82, 39, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.inputRow button:hover {
+  background: rgba(82, 39, 255, 0.3);
+  border-color: rgba(82, 39, 255, 0.5);
+}
+
+.empty {
+  opacity: 0.5;
+  font-size: 12px;
+  text-align: center;
+  padding: 12px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.itemText {
+  flex: 1;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 100, 100, 0.6);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.removeBtn:hover {
+  color: rgba(255, 100, 100, 1);
+}
+
+/* WINNERS PANEL */
+.winnersPanel {
+  padding: 16px;
+  background: rgba(236, 72, 153, 0.05);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: 12px;
+}
+
+.winnersList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.winnerItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(236, 72, 153, 0.1);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.modeTag {
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(236, 72, 153, 0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: capitalize;
+}
+
+.winnerText {
+  font-weight: 500;
+  color: rgba(236, 72, 153, 1);
+}
+
+/* WHEELS GRID */
+.wheelsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+/* WHEEL CONTAINER */
+.wheelContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.modeLabel {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.7;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
 }

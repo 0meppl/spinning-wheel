@@ -10,61 +10,16 @@ const MODE_COLORS = {
 };
 const REVEAL_COLORS = ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"];
 
-const DEFAULT_ENTRIES = ["Gewinnen", "Verlieren", "Nochmal"];
-
-export default function Glücksrad({ mode = "standard", shareEntries = false }) {
-  const storageKey = shareEntries ? "gluecksrad-entries-shared" : `gluecksrad-entries-${mode}`;
-
-  const [entries, setEntries] = useState(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      return saved ? JSON.parse(saved) : DEFAULT_ENTRIES;
-    } catch {
-      return DEFAULT_ENTRIES;
-    }
-  });
-  
-  // Reload entries when mode or shareEntries changes
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      setEntries(saved ? JSON.parse(saved) : DEFAULT_ENTRIES);
-    } catch {
-      setEntries(DEFAULT_ENTRIES);
-    }
-  }, [mode, shareEntries, storageKey]);
-  const [input, setInput]         = useState("");
+export default function Glücksrad({ mode = "standard", entries = [], onWinner }) {
   const [rotation, setRotation]   = useState(0);
   const [spinning, setSpinning]   = useState(false);
   const [winner, setWinner]       = useState(null);
-  const [winnerIndex, setWinnerIndex] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [history, setHistory]     = useState([]);
   const [revealed, setRevealed]   = useState(false);
 
   const canvasRef = useRef(null);
 
-  // Persist entries
-  useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(entries)); } catch {}
-  }, [entries, storageKey]);
-
-  const addEntry = () => {
-    const value = input.trim();
-    if (!value) return;
-    setEntries((prev) => [...prev, value]);
-    setInput("");
-  };
-
-  const removeEntry = (index) => {
-    setEntries((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const closeModal  = () => setModalOpen(false);
-  const removeWinner = () => {
-    if (winnerIndex !== null) removeEntry(winnerIndex);
-    setModalOpen(false);
-  };
 
   const spin = () => {
     if (spinning || entries.length === 0) return;
@@ -95,10 +50,9 @@ export default function Glücksrad({ mode = "standard", shareEntries = false }) 
       const won          = entries[index];
 
       setWinner(won);
-      setWinnerIndex(index);
       setRevealed(true);
       setSpinning(false);
-      setHistory((prev) => [won, ...prev].slice(0, 5));
+      if (onWinner) onWinner(won);
       setTimeout(() => setModalOpen(true), 500);
     };
 
@@ -199,63 +153,16 @@ export default function Glücksrad({ mode = "standard", shareEntries = false }) 
   const dotColors = MODE_COLORS[mode] ?? MODE_COLORS.standard;
 
   return (
-    <div className="rad">
-      {/* ---- Einträge-Panel ---- */}
-      <div className="panel">
-        <span className="panelLabel">Einträge</span>
-
-        <div className="inputRow">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addEntry()}
-            placeholder="Neuer Eintrag"
-          />
-          <button onClick={addEntry}>Hinzufügen</button>
-        </div>
-
-        {entries.length === 0 ? (
-          <div className="empty">Noch keine Einträge vorhanden.</div>
-        ) : (
-          <ul className="list">
-            {entries.map((entry, i) => (
-              <li className="item" key={`${entry}-${i}`}>
-                <span className="dot" style={{ background: dotColors[i % dotColors.length] }} />
-                <span className="itemText">{entry}</span>
-                <div className="actions">
-                  <button onClick={() => removeEntry(i)} aria-label="Entfernen">×</button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {history.length > 0 && (
-          <div className="historySection">
-            <span className="historyLabel">Zuletzt gezogen</span>
-            <div className="historyList">
-              {history.map((h, i) => (
-                <span
-                  key={i}
-                  className="historyItem"
-                  style={{ opacity: 1 - i * 0.18 }}
-                >
-                  {h}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ---- Rad-Panel ---- */}
+    <div className="wheelContainer">
+      <div className="modeLabel">{mode}</div>
+      
       <div className="wheelPanel">
         <div className="wheelWrapper">
           <div className="pointer" />
           <canvas
             ref={canvasRef}
-            width={340}
-            height={340}
+            width={280}
+            height={280}
             onClick={spin}
             className={spinning ? "" : "clickable"}
           />
@@ -270,20 +177,12 @@ export default function Glücksrad({ mode = "standard", shareEntries = false }) 
         </button>
       </div>
 
-      {/* ---- Modal ---- */}
       {modalOpen && (
         <div className="modalOverlay" onClick={closeModal}>
           <div className="modalBox" onClick={(e) => e.stopPropagation()}>
             <span className="modalLabel">Ergebnis</span>
             <span className="modalWinner">{winner}</span>
-            <div className="modalActions">
-              <button className="modalRemove" onClick={removeWinner}>
-                Aus Rad entfernen
-              </button>
-              <button className="modalOk" onClick={closeModal}>
-                Ok
-              </button>
-            </div>
+            <button className="modalOk" onClick={closeModal}>Ok</button>
           </div>
         </div>
       )}

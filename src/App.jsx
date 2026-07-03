@@ -4,9 +4,16 @@ import Grainient from "./Grainient";
 import { useState } from "react";
 
 export default function App() {
-  const [mode, setMode] = useState("standard");
-  const [shareEntries, setShareEntries] = useState(false);
+  const [entries, setEntries] = useState(["Gewinnen", "Verlieren", "Nochmal"]);
+  const [winners, setWinners] = useState({});
   const modes = ["standard", "transparent", "neon", "minimal", "abgedeckt"];
+
+  const updateWinner = (mode, winner) => {
+    setWinners((prev) => ({
+      ...prev,
+      [mode]: winner,
+    }));
+  };
 
   return (
     <div className="app">
@@ -30,7 +37,7 @@ export default function App() {
       {/* CONTENT GRID */}
       <div className="layout">
 
-        {/* LEFT */}
+        {/* LEFT - CONTROLS */}
         <div className="left">
           <MagicBento
             enableSpotlight
@@ -42,46 +49,80 @@ export default function App() {
             <div className="subtitle">Einträge hinzufügen & drehen</div>
           </MagicBento>
 
-          {/* MODE SWITCHER */}
-          <div className="modeSwitcher">
-            <span className="modeLabel">Design:</span>
-            <div className="modeButtons">
-              {modes.map((m) => (
-                <button
-                  key={m}
-                  className={`modeBtn ${mode === m ? "active" : ""}`}
-                  onClick={() => setMode(m)}
-                >
-                  {m}
-                </button>
-              ))}
+          {/* ENTRIES PANEL */}
+          <div className="entriesPanel">
+            <span className="panelLabel">Einträge (für alle Räder)</span>
+
+            <div className="inputRow">
+              <input
+                id="entryInput"
+                placeholder="Neuer Eintrag"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const value = e.target.value.trim();
+                    if (value) {
+                      setEntries((prev) => [...prev, value]);
+                      e.target.value = "";
+                    }
+                  }
+                }}
+              />
+              <button onClick={() => {
+                const input = document.getElementById("entryInput");
+                const value = input.value.trim();
+                if (value) {
+                  setEntries((prev) => [...prev, value]);
+                  input.value = "";
+                }
+              }}>Hinzufügen</button>
             </div>
-            
-            <button 
-              className="shareBtn"
-              onClick={() => setShareEntries(!shareEntries)}
-              title={shareEntries ? "Einträge sind geteilt" : "Jedes Design hat eigene Einträge"}
-            >
-              {shareEntries ? "🔗 Einträge geteilt" : "📋 Separate Einträge"}
-            </button>
-          </div>
 
-          <div className="wheelBox">
-            <Glücksrad mode={mode} shareEntries={shareEntries} />
-          </div>
-
-          {/* CHANGELOG */}
-          <div className="changelog">
-            <h3>✨ Was ist neu</h3>
-            <div className="changelogEntry">
-              <strong>v1.1.0</strong>
-              <ul>
-                <li>5 Design-Modi: Standard, Neon, Minimal, Transparent, Abgedeckt</li>
-                <li>Historie der letzten 5 gezogenen Gewinner</li>
-                <li>Einträge speichern automatisch im Browser (localStorage)</li>
-                <li>Gewinner wird im Rad angezeigt</li>
+            {entries.length === 0 ? (
+              <div className="empty">Noch keine Einträge vorhanden.</div>
+            ) : (
+              <ul className="list">
+                {entries.map((entry, i) => (
+                  <li className="item" key={`${entry}-${i}`}>
+                    <span className="itemText">{entry}</span>
+                    <button 
+                      className="removeBtn"
+                      onClick={() => setEntries((prev) => prev.filter((_, idx) => idx !== i))}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
               </ul>
+            )}
+          </div>
+
+          {/* WINNERS */}
+          {Object.keys(winners).length > 0 && (
+            <div className="winnersPanel">
+              <span className="panelLabel">🎯 Gewinner</span>
+              <div className="winnersList">
+                {modes.map((mode) => winners[mode] && (
+                  <div key={mode} className="winnerItem">
+                    <span className="modeTag">{mode}</span>
+                    <span className="winnerText">{winners[mode]}</span>
+                  </div>
+                ))}
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* RIGHT - WHEELS */}
+        <div className="right">
+          <div className="wheelsGrid">
+            {modes.map((mode) => (
+              <Glücksrad 
+                key={mode}
+                mode={mode}
+                entries={entries}
+                onWinner={(winner) => updateWinner(mode, winner)}
+              />
+            ))}
           </div>
         </div>
 
