@@ -1,8 +1,12 @@
 import Glücksrad from "./components/Glücksrad";
 import MagicBento from "./MagicBento";
 import Grainient from "./Grainient";
+import { useState } from "react";
 
 export default function App() {
+  const [mode, setMode] = useState("standard");
+  const modes = ["standard", "transparent", "neon", "minimal", "abgedeckt"];
+
   return (
     <div className="app">
 
@@ -37,8 +41,38 @@ export default function App() {
             <div className="subtitle">Einträge hinzufügen & drehen</div>
           </MagicBento>
 
+          {/* MODE SWITCHER */}
+          <div className="modeSwitcher">
+            <span className="modeLabel">Design:</span>
+            <div className="modeButtons">
+              {modes.map((m) => (
+                <button
+                  key={m}
+                  className={`modeBtn ${mode === m ? "active" : ""}`}
+                  onClick={() => setMode(m)}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="wheelBox">
-            <Glücksrad />
+            <Glücksrad mode={mode} />
+          </div>
+
+          {/* CHANGELOG */}
+          <div className="changelog">
+            <h3>✨ Was ist neu</h3>
+            <div className="changelogEntry">
+              <strong>v1.1.0</strong>
+              <ul>
+                <li>5 Design-Modi: Standard, Neon, Minimal, Transparent, Abgedeckt</li>
+                <li>Historie der letzten 5 gezogenen Gewinner</li>
+                <li>Einträge speichern automatisch im Browser (localStorage)</li>
+                <li>Gewinner wird im Rad angezeigt</li>
+              </ul>
+            </div>
           </div>
         </div>
 

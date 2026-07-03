@@ -57,3 +57,99 @@ body {
   display: flex;
   justify-content: center;
 }
+
+/* MODE SWITCHER */
+.modeSwitcher {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.modeLabel {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modeButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.modeBtn {
+  padding: 6px 14px;
+  background: rgba(82, 39, 255, 0.1);
+  border: 1px solid rgba(82, 39, 255, 0.3);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: capitalize;
+}
+
+.modeBtn:hover {
+  background: rgba(82, 39, 255, 0.2);
+  color: white;
+  border-color: rgba(82, 39, 255, 0.5);
+}
+
+.modeBtn.active {
+  background: rgba(82, 39, 255, 0.4);
+  border-color: rgb(82, 39, 255);
+  color: white;
+  box-shadow: 0 0 12px rgba(82, 39, 255, 0.3);
+}
+
+/* CHANGELOG */
+.changelog {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.changelog h3 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.changelogEntry strong {
+  display: block;
+  color: rgb(82, 39, 255);
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.changelogEntry ul {
+  margin: 0;
+  padding-left: 16px;
+  list-style: none;
+}
+
+.changelogEntry li {
+  opacity: 0.7;
+  margin: 4px 0;
+  padding-left: 8px;
+  position: relative;
+}
+
+.changelogEntry li:before {
+  content: "•";
+  position: absolute;
+  left: -8px;
+  color: rgb(82, 39, 255);
+}
