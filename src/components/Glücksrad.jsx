@@ -41,17 +41,18 @@ export default function Glücksrad({ mode = "standard", sharedEntries = false, g
   const canvasRef = useRef(null);
 
   const closeModal  = () => setModalOpen(false);
+
+  const spin = () => {
     if (spinning || entries.length === 0) return;
     setSpinning(true);
     setWinner(null);
-    setWinnerIndex(null);
     setModalOpen(false);
     setRevealed(false);
 
     const spins    = 5 + Math.random() * 4;
     const stop     = Math.random() * 360;
     const start    = rotation;
-    const final    = start + spins * 360 + stop;   // immer vorwärts
+    const final    = start + spins * 360 + stop;
     const duration = 4000;
     const startTime = Date.now();
 
