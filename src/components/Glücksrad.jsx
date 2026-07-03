@@ -10,10 +10,10 @@ const MODE_COLORS = {
 };
 const REVEAL_COLORS = ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"];
 
-export default function Glücksrad({ mode = "standard", sharedEntries = false, globalEntries = [], onWinner }) {
+export default function Glücksrad({ mode = "standard", onWinner }) {
   const storageKey = `gluecksrad-${mode}`;
   
-  const [localEntries, setLocalEntries] = useState(() => {
+  const [entries, setEntries] = useState(() => {
     try {
       const saved = localStorage.getItem(storageKey);
       return saved ? JSON.parse(saved) : [];
@@ -21,17 +21,8 @@ export default function Glücksrad({ mode = "standard", sharedEntries = false, g
       return [];
     }
   });
-
-  // Nutze globalEntries wenn geteilt, sonst lokalentries
-  const entries = sharedEntries ? globalEntries : localEntries;
-
-  // Speichere lokale Einträge
-  useEffect(() => {
-    if (!sharedEntries) {
-      try { localStorage.setItem(storageKey, JSON.stringify(localEntries)); } catch {}
-    }
-  }, [localEntries, sharedEntries, storageKey]);
-
+  
+  const [input, setInput] = useState("");
   const [rotation, setRotation]   = useState(0);
   const [spinning, setSpinning]   = useState(false);
   const [winner, setWinner]       = useState(null);
@@ -39,6 +30,22 @@ export default function Glücksrad({ mode = "standard", sharedEntries = false, g
   const [revealed, setRevealed]   = useState(false);
 
   const canvasRef = useRef(null);
+
+  // Speichere Einträge
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify(entries)); } catch {}
+  }, [entries, storageKey]);
+
+  const addEntry = () => {
+    const value = input.trim();
+    if (!value) return;
+    setEntries((prev) => [...prev, value]);
+    setInput("");
+  };
+
+  const removeEntry = (index) => {
+    setEntries((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const closeModal  = () => setModalOpen(false);
 
@@ -173,16 +180,49 @@ export default function Glücksrad({ mode = "standard", sharedEntries = false, g
   const dotColors = MODE_COLORS[mode] ?? MODE_COLORS.standard;
 
   return (
-    <div className="wheelContainer">
-      <div className="modeLabel">{mode}</div>
-      
+    <div className="rad">
+      {/* LEFT - ENTRIES */}
+      <div className="entriesPanel">
+        <span className="panelLabel">Einträge</span>
+
+        <div className="inputRow">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addEntry()}
+            placeholder="Neuer Eintrag"
+          />
+          <button onClick={addEntry}>+</button>
+        </div>
+
+        {entries.length === 0 ? (
+          <div className="empty">Noch keine Einträge vorhanden.</div>
+        ) : (
+          <ul className="list">
+            {entries.map((entry, i) => (
+              <li className="item" key={`${entry}-${i}`}>
+                <span className="dot" style={{ background: dotColors[i % dotColors.length] }} />
+                <span className="itemText">{entry}</span>
+                <button 
+                  className="removeBtn"
+                  onClick={() => removeEntry(i)}
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* CENTER - WHEEL */}
       <div className="wheelPanel">
         <div className="wheelWrapper">
           <div className="pointer" />
           <canvas
             ref={canvasRef}
-            width={280}
-            height={280}
+            width={340}
+            height={340}
             onClick={spin}
             className={spinning ? "" : "clickable"}
           />
@@ -197,6 +237,10 @@ export default function Glücksrad({ mode = "standard", sharedEntries = false, g
         </button>
       </div>
 
+      {/* RIGHT - EMPTY */}
+      <div className="rightPlaceholder"></div>
+
+      {/* MODAL */}
       {modalOpen && (
         <div className="modalOverlay" onClick={closeModal}>
           <div className="modalBox" onClick={(e) => e.stopPropagation()}>

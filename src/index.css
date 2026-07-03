@@ -18,6 +18,72 @@ body {
   z-index: 0;
 }
 
+/* Layout */
+.container {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  gap: 30px;
+}
+
+/* MODE BUTTONS */
+.modeButtons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.modeBtn {
+  padding: 8px 16px;
+  background: rgba(82, 39, 255, 0.1);
+  border: 1px solid rgba(82, 39, 255, 0.3);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: capitalize;
+}
+
+.modeBtn:hover {
+  background: rgba(82, 39, 255, 0.2);
+  color: white;
+  border-color: rgba(82, 39, 255, 0.5);
+}
+
+.modeBtn.active {
+  background: rgba(82, 39, 255, 0.4);
+  border-color: rgb(82, 39, 255);
+  color: white;
+  box-shadow: 0 0 12px rgba(82, 39, 255, 0.3);
+}
+
+/* MAIN LAYOUT */
+.mainLayout {
+  display: grid;
+  grid-template-columns: 1fr 400px 1fr;
+  gap: 40px;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.leftPanel,
+.rightPanel {
+  width: 100%;
+}
+
+.rightPlaceholder {
+  width: 100%;
+}
+
 /* Layout CENTER FIX */
 .layout {
   position: relative;
