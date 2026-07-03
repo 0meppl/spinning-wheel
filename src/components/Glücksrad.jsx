@@ -1,23 +1,43 @@
 import { useEffect, useRef, useState } from "react";
 import "../styles/glücksrad.css";
 
-const COLORS = [
-  "#5227ff",
-  "#7c3aed",
-  "#a855f7",
-  "#d946ef",
-  "#ec4899",
-  "#fb7185",
-];
+const MODE_COLORS = {
+  standard:    ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"],
+  transparent: ["rgba(82,39,255,0.4)","rgba(124,58,237,0.4)","rgba(168,85,247,0.4)","rgba(217,70,239,0.4)","rgba(236,72,153,0.4)","rgba(251,113,133,0.4)"],
+  neon:        ["#00ff88","#00ccff","#ff00ff","#ffff00","#ff6600","#ff0066"],
+  minimal:     ["#222","#333","#444","#555","#666","#777"],
+  abgedeckt:   ["#1a1a2e","#1a1a2e","#1a1a2e","#1a1a2e","#1a1a2e","#1a1a2e"],
+};
+const REVEAL_COLORS = ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"];
 
-export default function Glücksrad() {
-  const [entries, setEntries] = useState(["Gewinnen", "Verlieren", "Nochmal"]);
-  const [input, setInput] = useState("");
-  const [rotation, setRotation] = useState(0);
-  const [spinning, setSpinning] = useState(false);
-  const [winner, setWinner] = useState(null);
+const DEFAULT_ENTRIES = ["Gewinnen", "Verlieren", "Nochmal"];
+
+export default function Glücksrad({ mode = "standard" }) {
+  const storageKey = `gluecksrad-entries-${mode}`;
+
+  const [entries, setEntries] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : DEFAULT_ENTRIES;
+    } catch {
+      return DEFAULT_ENTRIES;
+    }
+  });
+  const [input, setInput]         = useState("");
+  const [rotation, setRotation]   = useState(0);
+  const [spinning, setSpinning]   = useState(false);
+  const [winner, setWinner]       = useState(null);
+  const [winnerIndex, setWinnerIndex] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [history, setHistory]     = useState([]);
+  const [revealed, setRevealed]   = useState(false);
 
   const canvasRef = useRef(null);
+
+  // Persist entries
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify(entries)); } catch {}
+  }, [entries, storageKey]);
 
   const addEntry = () => {
     const value = input.trim();
@@ -30,54 +50,66 @@ export default function Glücksrad() {
     setEntries((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const removeAllInstances = (name) => {
-    setEntries((prev) => prev.filter((e) => e !== name));
+  const closeModal  = () => setModalOpen(false);
+  const removeWinner = () => {
+    if (winnerIndex !== null) removeEntry(winnerIndex);
+    setModalOpen(false);
   };
 
   const spin = () => {
     if (spinning || entries.length === 0) return;
-
     setSpinning(true);
     setWinner(null);
+    setWinnerIndex(null);
+    setModalOpen(false);
+    setRevealed(false);
 
-    const spins = 5 + Math.random() * 4;
-    const stop = Math.random() * 360;
-    const final = spins * 360 + stop;
-
-    const start = rotation;
+    const spins    = 5 + Math.random() * 4;
+    const stop     = Math.random() * 360;
+    const start    = rotation;
+    const final    = start + spins * 360 + stop;   // immer vorwärts
     const duration = 4000;
     const startTime = Date.now();
 
     const animate = () => {
-      const t = Math.min((Date.now() - startTime) / duration, 1);
+      const t    = Math.min((Date.now() - startTime) / duration, 1);
       const ease = 1 - Math.pow(1 - t, 3);
-      const current = start + (final - start) * ease;
-      setRotation(current);
+      setRotation(start + (final - start) * ease);
 
-      if (t < 1) {
-        requestAnimationFrame(animate);
-        return;
-      }
+      if (t < 1) { requestAnimationFrame(animate); return; }
 
-      const normalized = final % 360;
-      const segment = 360 / entries.length;
-      const index = Math.floor((360 - normalized) / segment) % entries.length;
+      const normalized   = ((final % 360) + 360) % 360;
+      const segment      = 360 / entries.length;
+      const pointerAngle = ((270 - normalized) % 360 + 360) % 360;
+      const index        = Math.floor(pointerAngle / segment) % entries.length;
+      const won          = entries[index];
 
-      setWinner(entries[index]);
+      setWinner(won);
+      setWinnerIndex(index);
+      setRevealed(true);
       setSpinning(false);
+      setHistory((prev) => [won, ...prev].slice(0, 5));
+      setTimeout(() => setModalOpen(true), 500);
     };
 
     requestAnimationFrame(animate);
   };
 
-  const draw = () => {
+  // ---- draw ----
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    const size = canvas.width;
+    const ctx    = canvas.getContext("2d");
+    const size   = canvas.width;
     const center = size / 2;
     const radius = center - 8;
+
+    const colors =
+      mode === "abgedeckt" && !revealed
+        ? MODE_COLORS.abgedeckt
+        : mode === "abgedeckt" && revealed
+        ? REVEAL_COLORS
+        : MODE_COLORS[mode] ?? MODE_COLORS.standard;
 
     ctx.clearRect(0, 0, size, size);
 
@@ -93,47 +125,72 @@ export default function Glücksrad() {
 
     entries.forEach((entry, i) => {
       const start = i * angle + (rotation * Math.PI) / 180;
-      const end = start + angle;
+      const end   = start + angle;
 
+      if (mode === "neon") { ctx.shadowBlur = 14; ctx.shadowColor = colors[i % colors.length]; }
       ctx.beginPath();
       ctx.moveTo(center, center);
       ctx.arc(center, center, radius, start, end);
-      ctx.fillStyle = COLORS[i % COLORS.length];
+      ctx.fillStyle = colors[i % colors.length];
       ctx.fill();
+      ctx.shadowBlur = 0;
 
-      ctx.strokeStyle = "rgba(5,6,10,0.6)";
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(5,6,10,0.55)";
+      ctx.lineWidth   = 1.5;
       ctx.stroke();
 
-      ctx.save();
-      ctx.translate(center, center);
-      ctx.rotate(start + angle / 2);
+      // Text (hidden in "abgedeckt" while spinning)
+      if (!(mode === "abgedeckt" && !revealed)) {
+        const mid           = start + angle / 2;
+        const normalizedMid = ((mid % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const flip          = normalizedMid > Math.PI / 2 && normalizedMid < (Math.PI * 3) / 2;
 
-      ctx.fillStyle = "rgba(255,255,255,0.92)";
-      ctx.font = "600 13px Inter, system-ui, sans-serif";
-      ctx.textAlign = "right";
-
-      const text = entry.length > 14 ? entry.slice(0, 14) + "…" : entry;
-      ctx.fillText(text, radius - 14, 5);
-
-      ctx.restore();
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(mid + (flip ? Math.PI : 0));
+        ctx.fillStyle  = mode === "neon" ? "#000" : "rgba(255,255,255,0.92)";
+        ctx.font       = "600 13px Inter, system-ui, sans-serif";
+        ctx.textAlign  = flip ? "left" : "right";
+        const text     = entry.length > 14 ? entry.slice(0, 14) + "…" : entry;
+        ctx.fillText(text, flip ? -(radius - 14) : radius - 14, 5);
+        ctx.restore();
+      }
     });
 
+    // Hub – größer wenn Gewinner angezeigt wird
+    const hubR = winner && !spinning ? 52 : 14;
     ctx.beginPath();
-    ctx.arc(center, center, 14, 0, Math.PI * 2);
-    ctx.fillStyle = "#05060a";
+    ctx.arc(center, center, hubR, 0, Math.PI * 2);
+    ctx.fillStyle   = "rgba(5,6,10,0.9)";
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.15)";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth   = 1.5;
     ctx.stroke();
-  };
 
-  useEffect(() => {
-    draw();
-  }, [entries, rotation]);
+    // Gewinner-Text im Mittelpunkt
+    if (winner && !spinning) {
+      ctx.textAlign    = "center";
+      ctx.textBaseline = "middle";
+
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.font      = "500 8px Inter, sans-serif";
+      ctx.fillText("ERGEBNIS", center, center - 14);
+
+      ctx.fillStyle = "white";
+      ctx.font      = `700 ${winner.length > 8 ? "11" : "13"}px Inter, sans-serif`;
+      ctx.fillText(
+        winner.length > 10 ? winner.slice(0, 10) + "…" : winner,
+        center,
+        center + 4
+      );
+    }
+  }, [entries, rotation, winner, spinning, revealed, mode]);
+
+  const dotColors = MODE_COLORS[mode] ?? MODE_COLORS.standard;
 
   return (
     <div className="rad">
+      {/* ---- Einträge-Panel ---- */}
       <div className="panel">
         <span className="panelLabel">Einträge</span>
 
@@ -153,30 +210,45 @@ export default function Glücksrad() {
           <ul className="list">
             {entries.map((entry, i) => (
               <li className="item" key={`${entry}-${i}`}>
-                <span
-                  className="dot"
-                  style={{ background: COLORS[i % COLORS.length] }}
-                />
+                <span className="dot" style={{ background: dotColors[i % dotColors.length] }} />
                 <span className="itemText">{entry}</span>
-
                 <div className="actions">
-                  <button onClick={() => removeEntry(i)} aria-label="Entfernen">
-                    ×
-                  </button>
-                  <button onClick={() => removeAllInstances(entry)}>
-                    alle entfernen
-                  </button>
+                  <button onClick={() => removeEntry(i)} aria-label="Entfernen">×</button>
                 </div>
               </li>
             ))}
           </ul>
         )}
+
+        {history.length > 0 && (
+          <div className="historySection">
+            <span className="historyLabel">Zuletzt gezogen</span>
+            <div className="historyList">
+              {history.map((h, i) => (
+                <span
+                  key={i}
+                  className="historyItem"
+                  style={{ opacity: 1 - i * 0.18 }}
+                >
+                  {h}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* ---- Rad-Panel ---- */}
       <div className="wheelPanel">
         <div className="wheelWrapper">
           <div className="pointer" />
-          <canvas ref={canvasRef} width={340} height={340} />
+          <canvas
+            ref={canvasRef}
+            width={340}
+            height={340}
+            onClick={spin}
+            className={spinning ? "" : "clickable"}
+          />
         </div>
 
         <button
@@ -186,12 +258,25 @@ export default function Glücksrad() {
         >
           {spinning ? "läuft" : "drehen"}
         </button>
-
-        <div className={`winner ${winner ? "visible" : ""}`}>
-          <span className="winnerLabel">Ergebnis</span>
-          <span className="winnerName">{winner ?? "—"}</span>
-        </div>
       </div>
+
+      {/* ---- Modal ---- */}
+      {modalOpen && (
+        <div className="modalOverlay" onClick={closeModal}>
+          <div className="modalBox" onClick={(e) => e.stopPropagation()}>
+            <span className="modalLabel">Ergebnis</span>
+            <span className="modalWinner">{winner}</span>
+            <div className="modalActions">
+              <button className="modalRemove" onClick={removeWinner}>
+                Aus Rad entfernen
+              </button>
+              <button className="modalOk" onClick={closeModal}>
+                Ok
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
