@@ -32,7 +32,15 @@ export default function Glücksrad({ mode = "standard", sharedEntries = false, g
     }
   }, [localEntries, sharedEntries, storageKey]);
 
-  const spin = () => {
+  const [rotation, setRotation]   = useState(0);
+  const [spinning, setSpinning]   = useState(false);
+  const [winner, setWinner]       = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [revealed, setRevealed]   = useState(false);
+
+  const canvasRef = useRef(null);
+
+  const closeModal  = () => setModalOpen(false);
     if (spinning || entries.length === 0) return;
     setSpinning(true);
     setWinner(null);
