@@ -3,275 +3,170 @@ import Glücksrad from "./components/Glücksrad";
 import MagicBento from "./MagicBento";
 import Grainient from "./Grainient";
 
-const MODES = ["standard", "transparent", "neon", "minimal", "abgedeckt"];
+const MODES = [
+  { id: "standard",    label: "Standard" },
+  { id: "transparent", label: "Transparent" },
+  { id: "neon",        label: "Neon" },
+  { id: "minimal",     label: "Minimal" },
+  { id: "abgedeckt",   label: "Abgedeckt" },
+];
+
+const DOT_COLORS = {
+  standard:    ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"],
+  transparent: ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"],
+  neon:        ["#00e676","#00b0ff","#e040fb","#ffea00","#ff6d00","#ff1744"],
+  minimal:     ["#52527a","#5c5c8a","#6666a0","#7070b0","#7a7ac0","#8484d0"],
+  abgedeckt:   ["#444","#444","#444","#444","#444","#444"],
+};
+
+function load(mode) {
+  try { return JSON.parse(localStorage.getItem(`rad-${mode}`) ?? "[]"); }
+  catch { return []; }
+}
+function save(mode, data) {
+  try { localStorage.setItem(`rad-${mode}`, JSON.stringify(data)); } catch {}
+}
 
 export default function App() {
-  const [currentMode, setCurrentMode] = useState("standard");
-  const [copySource, setCopySource] = useState(null);
-  const [copyTarget, setCopyTarget] = useState(null);
-  const [showCopyUI, setShowCopyUI] = useState(false);
-  const [winners, setWinners] = useState({});
-
-  // SEPARATE STATE FÜR JEDES RAD
-  const [entries, setEntries] = useState(() => {
-    const stored = {};
-    MODES.forEach(mode => {
-      try {
-        const key = `glücksrad-entries-${mode}`;
-        const data = localStorage.getItem(key);
-        stored[mode] = data ? JSON.parse(data) : [];
-      } catch {
-        stored[mode] = [];
-      }
-    });
-    return stored;
+  const [mode, setMode]   = useState("standard");
+  const [all, setAll]     = useState(() => {
+    const obj = {};
+    MODES.forEach(m => { obj[m.id] = load(m.id); });
+    return obj;
   });
+  const [input, setInput]           = useState("");
+  const [winners, setWinners]       = useState({});
+  const [showCopy, setShowCopy]     = useState(false);
+  const [copyFrom, setCopyFrom]     = useState("");
 
-  const [input, setInput] = useState("");
-  const [editingId, setEditingId] = useState(null);
-  const [editingText, setEditingText] = useState("");
+  const entries = all[mode] ?? [];
 
-  // Speichere Einträge für aktuelles Rad
-  useEffect(() => {
-    try {
-      const key = `glücksrad-entries-${currentMode}`;
-      localStorage.setItem(key, JSON.stringify(entries[currentMode] || []));
-    } catch {}
-  }, [entries, currentMode]);
-
-  const currentEntries = entries[currentMode] || [];
+  useEffect(() => { save(mode, all[mode] ?? []); }, [all, mode]);
 
   const addEntry = () => {
-    const value = input.trim();
-    if (!value) return;
-    setEntries(prev => ({
-      ...prev,
-      [currentMode]: [...(prev[currentMode] || []), { id: Date.now(), text: value }]
-    }));
+    const v = input.trim();
+    if (!v) return;
+    setAll(p => ({ ...p, [mode]: [...(p[mode] ?? []), { id: Date.now(), text: v }] }));
     setInput("");
   };
 
-  const editEntry = (id, newText) => {
-    if (!newText.trim()) return;
-    setEntries(prev => ({
-      ...prev,
-      [currentMode]: prev[currentMode].map(e => e.id === id ? { ...e, text: newText } : e)
-    }));
-    setEditingId(null);
-  };
+  const removeEntry = (id) =>
+    setAll(p => ({ ...p, [mode]: p[mode].filter(e => e.id !== id) }));
 
-  const removeEntry = (id) => {
-    setEntries(prev => ({
-      ...prev,
-      [currentMode]: prev[currentMode].filter(e => e.id !== id)
-    }));
-  };
+  const handleWinner     = (won) => setWinners(p => ({ ...p, [mode]: won }));
+  const handleRemoveWinner = (id) => removeEntry(id);
 
   const copyEntries = () => {
-    if (!copySource || !copyTarget) return;
-    setEntries(prev => ({
-      ...prev,
-      [copyTarget]: [...prev[copyTarget], ...prev[copySource]]
-    }));
-    setCopySource(null);
-    setCopyTarget(null);
-    setShowCopyUI(false);
-  };
-
-  const updateWinner = (winner) => {
-    setWinners(prev => ({ ...prev, [currentMode]: winner }));
+    if (!copyFrom || copyFrom === mode) return;
+    const cloned = (all[copyFrom] ?? []).map(e => ({ ...e, id: Date.now() + Math.random() }));
+    setAll(p => ({ ...p, [mode]: [...(p[mode] ?? []), ...cloned] }));
+    setShowCopy(false);
+    setCopyFrom("");
   };
 
   return (
     <div className="app">
       <div className="bg">
         <Grainient
-          color1="#FF9FFC"
-          color2="#5227FF"
-          color3="#B497CF"
-          timeSpeed={0.25}
-          warpStrength={1}
-          warpFrequency={5}
-          warpSpeed={2}
-          warpAmplitude={50}
-          grainAmount={0.1}
-          contrast={1.5}
+          color1="#FF9FFC" color2="#5227FF" color3="#B497CF"
+          timeSpeed={0.25} warpStrength={1} warpFrequency={5}
+          warpSpeed={2} warpAmplitude={50} grainAmount={0.1} contrast={1.5}
         />
       </div>
 
       <div className="container">
-        <MagicBento
-          enableSpotlight
-          enableBorderGlow
-          spotlightRadius={400}
-          glowColor="132, 0, 255"
-        >
+        <MagicBento enableSpotlight enableBorderGlow spotlightRadius={400} glowColor="132, 0, 255">
           <div className="title">Glücksrad</div>
           <div className="subtitle">Einträge hinzufügen & drehen</div>
         </MagicBento>
 
-        {/* MODE SWITCHER */}
-        <div className="modeButtons">
-          {MODES.map(mode => (
-            <button 
-              key={mode}
-              className={`modeBtn ${currentMode === mode ? "active" : ""}`}
-              onClick={() => setCurrentMode(mode)}
-            >
-              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+        <div className="modeBar">
+          {MODES.map(m => (
+            <button key={m.id} className={`modeBtn${mode === m.id ? " active" : ""}`} onClick={() => setMode(m.id)}>
+              {m.label}
             </button>
           ))}
         </div>
 
         <div className="mainLayout">
-          {/* LEFT - ENTRIES MANAGEMENT */}
+          {/* LEFT – Einträge */}
           <div className="leftPanel">
-            <div className="panelCard">
-              <div className="panelHeader">
-                <h3>📝 Einträge ({currentMode})</h3>
-              </div>
+            <div className="card">
+              <span className="cardLabel">Einträge — {mode}</span>
 
-              {/* INPUT */}
               <div className="inputRow">
                 <input
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addEntry()}
-                  placeholder="Neuer Eintrag..."
-                  className="entryInput"
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addEntry()}
+                  placeholder="Neuer Eintrag"
                 />
-                <button onClick={addEntry} className="btnAdd">+</button>
+                <button onClick={addEntry}>Hinzufügen</button>
               </div>
 
-              {/* ENTRIES LIST */}
-              {currentEntries.length === 0 ? (
-                <div className="emptyState">Noch keine Einträge vorhanden</div>
+              {entries.length === 0 ? (
+                <div className="empty">Noch keine Einträge.</div>
               ) : (
-                <ul className="entriesList">
-                  {currentEntries.map((entry, idx) => (
-                    <li key={entry.id} className="entryItem">
-                      {editingId === entry.id ? (
-                        <div className="editRow">
-                          <input
-                            value={editingText}
-                            onChange={(e) => setEditingText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") editEntry(entry.id, editingText);
-                              if (e.key === "Escape") setEditingId(null);
-                            }}
-                            autoFocus
-                          />
-                          <button onClick={() => editEntry(entry.id, editingText)} className="btnSmall">✓</button>
-                          <button onClick={() => setEditingId(null)} className="btnSmall cancel">✕</button>
-                        </div>
-                      ) : (
-                        <>
-                          <span className="dotColor" style={{background: getColorForMode(currentMode)[idx % 6]}} />
-                          <span className="entryText">{entry.text}</span>
-                          <button 
-                            onClick={() => { setEditingId(entry.id); setEditingText(entry.text); }}
-                            className="btnSmall"
-                          >✎</button>
-                          <button 
-                            onClick={() => removeEntry(entry.id)}
-                            className="btnSmall delete"
-                          >×</button>
-                        </>
-                      )}
+                <ul className="list">
+                  {entries.map((e, i) => (
+                    <li key={e.id} className="item">
+                      <span className="dot" style={{ background: (DOT_COLORS[mode] ?? DOT_COLORS.standard)[i % 6] }} />
+                      <span className="itemText">{e.text}</span>
+                      <button className="removeBtn" onClick={() => removeEntry(e.id)}>×</button>
                     </li>
                   ))}
                 </ul>
               )}
 
-              {/* COPY BUTTON */}
-              <button 
-                onClick={() => setShowCopyUI(!showCopyUI)}
-                className="btnCopy"
-              >
-                📋 Einträge kopieren
+              <button className="copyToggle" onClick={() => setShowCopy(p => !p)}>
+                {showCopy ? "Abbrechen" : "Einträge kopieren von …"}
               </button>
-            </div>
 
-            {/* COPY UI */}
-            {showCopyUI && (
-              <div className="copyPanel">
-                <div className="copyStep">
-                  <label>Von Rad:</label>
-                  <select 
-                    value={copySource || ""}
-                    onChange={(e) => setCopySource(e.target.value || null)}
-                    className="selectBox"
-                  >
-                    <option value="">-- Wählen --</option>
-                    {MODES.map(m => (
-                      <option key={m} value={m}>{m}</option>
+              {showCopy && (
+                <div className="copyRow">
+                  <select value={copyFrom} onChange={e => setCopyFrom(e.target.value)}>
+                    <option value="">Rad wählen</option>
+                    {MODES.filter(m2 => m2.id !== mode).map(m2 => (
+                      <option key={m2.id} value={m2.id}>{m2.label}</option>
                     ))}
                   </select>
+                  <button onClick={copyEntries} disabled={!copyFrom}>Übernehmen</button>
                 </div>
-                <div className="copyStep">
-                  <label>Zu Rad:</label>
-                  <select 
-                    value={copyTarget || ""}
-                    onChange={(e) => setCopyTarget(e.target.value || null)}
-                    className="selectBox"
-                  >
-                    <option value="">-- Wählen --</option>
-                    {MODES.map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-                <button 
-                  onClick={copyEntries}
-                  disabled={!copySource || !copyTarget || copySource === copyTarget}
-                  className="btnCopyExecute"
-                >
-                  Jetzt kopieren
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* CENTER - WHEEL */}
+          {/* CENTER – Rad */}
           <div className="centerPanel">
-            <Glücksrad 
-              mode={currentMode} 
-              entries={currentEntries}
-              onWinner={updateWinner}
+            <Glücksrad
+              key={mode}
+              mode={mode}
+              entries={entries}
+              onWinner={handleWinner}
+              onRemoveWinner={handleRemoveWinner}
             />
           </div>
 
-          {/* RIGHT - WINNERS */}
-          {Object.keys(winners).length > 0 && (
-            <div className="rightPanel">
-              <div className="panelCard winnersCard">
-                <div className="panelHeader">
-                  <h3>🏆 Gewinner</h3>
-                </div>
-                <div className="winnersList">
-                  {MODES.map(mode => winners[mode] && (
-                    <div key={mode} className="winnerItem">
-                      <span className="winnerMode">{mode}</span>
-                      <span className="winnerValue">{winners[mode]}</span>
-                    </div>
+          {/* RIGHT – Gewinner */}
+          <div className="rightPanel">
+            <div className="card">
+              <span className="cardLabel">Letzte Gewinner</span>
+              {Object.keys(winners).length === 0 ? (
+                <div className="empty">Noch kein Gewinner.</div>
+              ) : (
+                <ul className="winnerList">
+                  {MODES.map(m => winners[m.id] && (
+                    <li key={m.id} className="winnerItem">
+                      <span className="winnerMode">{m.label}</span>
+                      <span className="winnerValue">{winners[m.id]}</span>
+                    </li>
                   ))}
-                </div>
-              </div>
+                </ul>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
   );
-}
-
-function getColorForMode(mode) {
-  const colors = {
-    standard: ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"],
-    transparent: ["rgba(82,39,255,0.4)","rgba(124,58,237,0.4)","rgba(168,85,247,0.4)","rgba(217,70,239,0.4)","rgba(236,72,153,0.4)","rgba(251,113,133,0.4)"],
-    neon: ["#00ff88","#00ccff","#ff00ff","#ffff00","#ff6600","#ff0066"],
-    minimal: ["#222","#333","#444","#555","#666","#777"],
-    abgedeckt: ["#1a1a2e","#1a1a2e","#1a1a2e","#1a1a2e","#1a1a2e","#1a1a2e"]
-  };
-  return colors[mode] || colors.standard;
 }
