@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Glücksrad from "./components/Glücksrad";
 import MagicBento from "./MagicBento";
-import Grainient from "./Grainient";
+import Particles from "./components/Particles";
 
 const MODES = [
   { id: "standard",    label: "Standard" },
@@ -66,13 +66,15 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="bg">
-        <Grainient
-          color1="#FF9FFC" color2="#5227FF" color3="#B497CF"
-          timeSpeed={0.25} warpStrength={1} warpFrequency={5}
-          warpSpeed={2} warpAmplitude={50} grainAmount={0.1} contrast={1.5}
-        />
-      </div>
+  <div className="bg">
+  <Particles
+    quantity={140}
+    color="#8b5cf6"
+    staticity={45}
+    ease={55}
+    size={1}
+  />
+</div>
 
       <div className="container">
         <MagicBento enableSpotlight enableBorderGlow spotlightRadius={400} glowColor="132, 0, 255">

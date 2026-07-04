@@ -25,14 +25,13 @@ body {
 .bg {
   position: fixed;
   inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.55;
+  z-index: -1;
+  overflow: hidden;
 }
 
 .container {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   width: 100%;
   max-width: 1360px;
   display: flex;
