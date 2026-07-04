@@ -2,13 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import "../styles/glücksrad.css";
 
 const MODE_COLORS = {
-  standard:    ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"],
-  transparent: ["rgba(82,39,255,0.38)","rgba(124,58,237,0.38)","rgba(168,85,247,0.38)","rgba(217,70,239,0.38)","rgba(236,72,153,0.38)","rgba(251,113,133,0.38)"],
-  neon:        ["#00e676","#00b0ff","#e040fb","#ffea00","#ff6d00","#ff1744"],
-  minimal:     ["#2a2a38","#34344a","#3e3e5a","#48486a","#52527a","#5c5c8a"],
-  abgedeckt:   ["#14141e","#14141e","#14141e","#14141e","#14141e","#14141e"],
+  // Satte, harmonische Töne – kein Neon
+  standard:    ["#4f46e5","#7c3aed","#9333ea","#c026d3","#db2777","#e11d48"],
+  // Halbtransparent, zeigt Grainient-Hintergrund durch
+  transparent: ["rgba(79,70,229,0.42)","rgba(124,58,237,0.42)","rgba(147,51,234,0.42)","rgba(192,38,211,0.42)","rgba(219,39,119,0.42)","rgba(225,29,72,0.42)"],
+  // Neon-Modus: bewusst leuchtend, aber etwas zurückhaltender
+  neon:        ["#22d3ee","#818cf8","#a78bfa","#f472b6","#fb923c","#4ade80"],
+  // Minimal: fast monochrom, nur Graustufen
+  minimal:     ["#1e1e28","#28283a","#32324c","#3c3c5e","#464670","#505082"],
+  // Abgedeckt: alle Felder gleich dunkel bis zum Reveal
+  abgedeckt:   ["#141420","#141420","#141420","#141420","#141420","#141420"],
 };
-const REVEAL_COLORS = ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"];
+const REVEAL_COLORS = ["#4f46e5","#7c3aed","#9333ea","#c026d3","#db2777","#e11d48"];
 
 export default function Glücksrad({ mode = "standard", entries = [], onWinner, onRemoveWinner }) {
   const [rotation, setRotation]       = useState(0);

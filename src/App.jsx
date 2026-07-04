@@ -12,11 +12,11 @@ const MODES = [
 ];
 
 const DOT_COLORS = {
-  standard:    ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"],
-  transparent: ["#5227ff","#7c3aed","#a855f7","#d946ef","#ec4899","#fb7185"],
-  neon:        ["#00e676","#00b0ff","#e040fb","#ffea00","#ff6d00","#ff1744"],
-  minimal:     ["#52527a","#5c5c8a","#6666a0","#7070b0","#7a7ac0","#8484d0"],
-  abgedeckt:   ["#444","#444","#444","#444","#444","#444"],
+  standard:    ["#4f46e5","#7c3aed","#9333ea","#c026d3","#db2777","#e11d48"],
+  transparent: ["#4f46e5","#7c3aed","#9333ea","#c026d3","#db2777","#e11d48"],
+  neon:        ["#22d3ee","#818cf8","#a78bfa","#f472b6","#fb923c","#4ade80"],
+  minimal:     ["#3c3c5e","#464670","#505082","#5a5a94","#6464a6","#6e6eb8"],
+  abgedeckt:   ["#333","#333","#333","#333","#333","#333"],
 };
 
 function load(mode) {

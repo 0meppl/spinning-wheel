@@ -1,21 +1,25 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #05060a;
-  color: white;
+  background: #0d0d10;
+  color: #e2e2e8;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-/* ── App shell ── */
+/* ── Shell ── */
 .app {
   position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 20px 60px;
+  padding: 48px 24px 80px;
 }
 
 .bg {
@@ -23,144 +27,147 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  opacity: 0.55;
 }
 
 .container {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 1400px;
+  max-width: 1360px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
+  gap: 28px;
 }
 
 /* ── Header ── */
 .title {
-  font-size: 30px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: -0.5px;
+  font-size: 26px;
+  font-weight: 650;
+  color: #f0f0f5;
+  letter-spacing: -0.6px;
   text-align: center;
 }
 
 .subtitle {
   font-size: 13px;
-  color: rgba(255,255,255,0.4);
-  margin-top: 5px;
+  color: rgba(226,226,232,0.38);
+  margin-top: 4px;
   text-align: center;
+  font-weight: 400;
 }
 
-/* ── Mode bar ── */
+/* ── Mode tabs ── */
 .modeBar {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: 2px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 3px;
 }
 
 .modeBtn {
-  padding: 7px 16px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 8px;
-  color: rgba(255,255,255,0.45);
+  padding: 6px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: rgba(226,226,232,0.45);
   font-size: 13px;
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
 }
 
-.modeBtn:hover {
-  background: rgba(255,255,255,0.07);
-  color: rgba(255,255,255,0.75);
-}
+.modeBtn:hover { color: rgba(226,226,232,0.78); }
 
 .modeBtn.active {
-  background: rgba(99,102,241,0.14);
-  border-color: rgba(99,102,241,0.38);
-  color: white;
+  background: rgba(255,255,255,0.09);
+  color: #f0f0f5;
 }
 
-/* ── 3-column layout ── */
+/* ── 3-col grid ── */
 .mainLayout {
   display: grid;
-  grid-template-columns: 300px 1fr 260px;
-  gap: 20px;
+  grid-template-columns: 288px 1fr 248px;
+  gap: 16px;
   width: 100%;
   align-items: start;
 }
 
-@media (max-width: 1080px) {
-  .mainLayout { grid-template-columns: 1fr; }
+@media (max-width: 1100px) {
+  .mainLayout { grid-template-columns: 1fr; gap: 12px; }
   .leftPanel, .rightPanel { position: static; }
 }
 
-.leftPanel, .rightPanel {
-  position: sticky;
-  top: 32px;
-}
+.leftPanel  { position: sticky; top: 24px; }
+.rightPanel { position: sticky; top: 24px; }
+.centerPanel { display: flex; justify-content: center; }
 
 /* ── Card ── */
 .card {
-  background: rgba(255,255,255,0.028);
+  background: rgba(255,255,255,0.026);
   border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 14px;
-  padding: 18px;
+  border-radius: 12px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .cardLabel {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.3);
+  color: rgba(226,226,232,0.28);
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-/* ── Input row ── */
-.inputRow {
-  display: flex;
-  gap: 7px;
-}
+/* ── Input ── */
+.inputRow { display: flex; gap: 6px; }
 
 .inputRow input {
   flex: 1;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px;
-  padding: 9px 11px;
-  color: white;
+  border-radius: 7px;
+  padding: 8px 11px;
+  color: #e2e2e8;
   font-size: 13px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.12s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.inputRow input::placeholder { color: rgba(255,255,255,0.22); }
-.inputRow input:focus { border-color: rgba(99,102,241,0.5); }
+.inputRow input::placeholder { color: rgba(226,226,232,0.2); }
+
+.inputRow input:focus {
+  border-color: rgba(129,140,248,0.5);
+  background: rgba(255,255,255,0.07);
+}
 
 .inputRow button {
-  background: rgba(99,102,241,0.13);
-  border: 1px solid rgba(99,102,241,0.28);
-  border-radius: 8px;
-  padding: 9px 13px;
-  color: white;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 7px;
+  padding: 8px 13px;
+  color: #e2e2e8;
   font-size: 13px;
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .inputRow button:hover {
-  background: rgba(99,102,241,0.22);
-  border-color: rgba(99,102,241,0.48);
+  background: rgba(255,255,255,0.11);
+  border-color: rgba(255,255,255,0.14);
 }
 
 /* ── Entry list ── */
@@ -168,33 +175,34 @@ body {
   list-style: none;
   display: flex;
   flex-direction: column;
-  max-height: 360px;
+  max-height: 340px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.08) transparent;
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 4px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 8px;
+  padding: 7px 2px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 
 .item:last-child { border-bottom: none; }
 
 .dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
+  opacity: 0.85;
 }
 
 .itemText {
   flex: 1;
   font-size: 13px;
-  color: rgba(255,255,255,0.78);
+  color: rgba(226,226,232,0.8);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -203,30 +211,30 @@ body {
 .removeBtn {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.25);
-  font-size: 17px;
+  color: rgba(226,226,232,0.22);
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
-  padding: 1px 5px;
+  padding: 2px 6px;
   opacity: 0;
   transition: color 0.12s, opacity 0.12s;
   font-family: inherit;
 }
 
 .item:hover .removeBtn { opacity: 1; }
-.removeBtn:hover { color: rgba(255,255,255,0.75); }
+.removeBtn:hover { color: rgba(226,226,232,0.7); }
 
 .empty {
   font-size: 13px;
-  color: rgba(255,255,255,0.22);
-  padding: 4px;
+  color: rgba(226,226,232,0.2);
+  padding: 6px 2px;
 }
 
-/* ── Copy feature ── */
+/* ── Copy ── */
 .copyToggle {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.3);
+  color: rgba(226,226,232,0.28);
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
@@ -235,79 +243,75 @@ body {
   transition: color 0.12s;
 }
 
-.copyToggle:hover { color: rgba(255,255,255,0.55); }
+.copyToggle:hover { color: rgba(226,226,232,0.55); }
 
-.copyRow {
-  display: flex;
-  gap: 7px;
-}
+.copyRow { display: flex; gap: 6px; }
 
 .copyRow select {
   flex: 1;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px;
-  padding: 8px 10px;
-  color: white;
+  border-radius: 7px;
+  padding: 7px 10px;
+  color: #e2e2e8;
   font-size: 13px;
   font-family: inherit;
   outline: none;
+  appearance: none;
+  cursor: pointer;
 }
 
-.copyRow select option { background: #14141e; }
+.copyRow select option { background: #18181e; }
 
 .copyRow button {
-  background: rgba(99,102,241,0.13);
-  border: 1px solid rgba(99,102,241,0.28);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: white;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 7px;
+  padding: 7px 12px;
+  color: #e2e2e8;
   font-size: 13px;
   font-family: inherit;
   cursor: pointer;
   transition: background 0.12s;
 }
 
-.copyRow button:hover:not(:disabled) { background: rgba(99,102,241,0.22); }
-.copyRow button:disabled { opacity: 0.35; cursor: not-allowed; }
-
-/* ── Center ── */
-.centerPanel {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
+.copyRow button:hover:not(:disabled) { background: rgba(255,255,255,0.11); }
+.copyRow button:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ── Winners ── */
 .winnerList {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
 }
 
 .winnerItem {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 9px 11px;
+  gap: 8px;
+  padding: 8px 10px;
   background: rgba(255,255,255,0.03);
-  border-radius: 8px;
+  border-radius: 7px;
+  transition: background 0.12s;
 }
+
+.winnerItem:hover { background: rgba(255,255,255,0.05); }
 
 .winnerMode {
   font-size: 10px;
   font-weight: 600;
-  color: rgba(255,255,255,0.35);
+  color: rgba(226,226,232,0.3);
   text-transform: capitalize;
   white-space: nowrap;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  min-width: 72px;
 }
 
 .winnerValue {
   font-size: 13px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.82);
+  font-weight: 500;
+  color: rgba(226,226,232,0.85);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
