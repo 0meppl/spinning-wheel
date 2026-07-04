@@ -2,10 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import "../styles/glücksrad.css";
 
 const MODE_COLORS = {
+  // Satte, harmonische Töne – kein Neon
   standard:    ["#4f46e5","#7c3aed","#9333ea","#c026d3","#db2777","#e11d48"],
-  transparent: ["rgba(79,70,229,0.42)","rgba(124,58,237,0.42)","rgba(147,51,234,0.42)","rgba(192,38,211,0.42)","rgba(219,39,119,0.42)","rgba(225,29,72,0.42)"], 
+  // Halbtransparent, zeigt Grainient-Hintergrund durch
+  transparent: ["rgba(79,70,229,0.42)","rgba(124,58,237,0.42)","rgba(147,51,234,0.42)","rgba(192,38,211,0.42)","rgba(219,39,119,0.42)","rgba(225,29,72,0.42)"],
+  // Neon-Modus: bewusst leuchtend, aber etwas zurückhaltender
   neon:        ["#22d3ee","#818cf8","#a78bfa","#f472b6","#fb923c","#4ade80"],
-  minimal:     ["#1e1e28","#28283a","#32324c","#3c3c5e","#464670","#505082"], 
+  // Minimal: fast monochrom, nur Graustufen
+  minimal:     ["#1e1e28","#28283a","#32324c","#3c3c5e","#464670","#505082"],
+  // Abgedeckt: alle Felder gleich dunkel bis zum Reveal
   abgedeckt:   ["#141420","#141420","#141420","#141420","#141420","#141420"],
 };
 const REVEAL_COLORS = ["#4f46e5","#7c3aed","#9333ea","#c026d3","#db2777","#e11d48"];
