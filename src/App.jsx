@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Glücksrad from "./components/Glücksrad";
+import Dashboard from "./components/Dashboard";
 import Particles from "./components/Particles";
 
 const MODES = [
@@ -18,47 +19,101 @@ const DOT_COLORS = {
   abgedeckt:   ["#444","#444","#444","#444","#444","#444"],
 };
 
-function load(mode) {
-  try { return JSON.parse(localStorage.getItem(`rad-${mode}`) ?? "[]"); }
-  catch { return []; }
-}
-function save(mode, data) {
-  try { localStorage.setItem(`rad-${mode}`, JSON.stringify(data)); } catch {}
-}
+function load(k)       { try { return JSON.parse(localStorage.getItem(k) ?? "[]"); } catch { return []; } }
+function save(k, data) { try { localStorage.setItem(k, JSON.stringify(data)); }       catch {} }
 
 export default function App() {
+  // Dashboard via URL-Hash: /#dashboard
+  const [showDash, setShowDash] = useState(() => location.hash === "#dashboard");
+
+  useEffect(() => {
+    const onHash = () => setShowDash(location.hash === "#dashboard");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  const openDash = () => { location.hash = "#dashboard"; setShowDash(true); };
+  const exitDash = () => { location.hash = "";           setShowDash(false); };
+
+  if (showDash) return <Dashboard onExit={exitDash} />;
+
+  return <MainApp onOpenDash={openDash} />;
+}
+
+function MainApp({ onOpenDash }) {
   const [mode, setMode]         = useState("standard");
   const [all, setAll]           = useState(() => {
     const obj = {};
-    MODES.forEach(m => { obj[m.id] = load(m.id); });
+    MODES.forEach(m => { obj[m.id] = load(`rad-${m.id}`); });
     return obj;
   });
   const [input, setInput]       = useState("");
+  const [dupWarning, setDupWarn] = useState(false);
   const [winners, setWinners]   = useState({});
   const [showCopy, setShowCopy] = useState(false);
   const [copyFrom, setCopyFrom] = useState("");
+  const [editingId, setEditingId]     = useState(null);
+  const [editingText, setEditingText] = useState("");
+  const [copied, setCopied]           = useState(false);
+  const [showImport, setShowImport]   = useState(false);
+  const [importText, setImportText]   = useState("");
 
   const entries = all[mode] ?? [];
 
-  useEffect(() => { save(mode, all[mode] ?? []); }, [all, mode]);
+  // Geteilter Link beim Laden auswerten
+  useEffect(() => {
+    const p = new URLSearchParams(location.search);
+    const sm = p.get("m"), se = p.get("e");
+    if (sm && se && MODES.find(m => m.id === sm)) {
+      const parsed = se.split(",").map(t => t.trim()).filter(Boolean)
+        .map(text => ({ id: Date.now() + Math.random(), text }));
+      setMode(sm);
+      setAll(prev => ({ ...prev, [sm]: parsed }));
+      history.replaceState({}, "", location.pathname);
+    }
+  }, []);
+
+  useEffect(() => { save(`rad-${mode}`, all[mode] ?? []); }, [all, mode]);
 
   const addEntry = () => {
     const v = input.trim();
     if (!v) return;
+    if (!dupWarning && (all[mode] ?? []).some(e => e.text.toLowerCase() === v.toLowerCase())) {
+      setDupWarn(true); return;
+    }
     setAll(p => ({ ...p, [mode]: [...(p[mode] ?? []), { id: Date.now(), text: v }] }));
-    setInput("");
+    setInput(""); setDupWarn(false);
   };
 
-  const removeEntry    = (id) => setAll(p => ({ ...p, [mode]: p[mode].filter(e => e.id !== id) }));
-  const handleWinner   = (won) => setWinners(p => ({ ...p, [mode]: won }));
-  const handleRemove   = (id) => removeEntry(id);
+  const removeEntry = (id) => setAll(p => ({ ...p, [mode]: p[mode].filter(e => e.id !== id) }));
+  const clearAll    = ()   => { if (confirm(`Alle ${entries.length} Einträge für „${mode}" löschen?`)) setAll(p => ({ ...p, [mode]: [] })); };
+
+  const commitEdit = (id) => {
+    const v = editingText.trim();
+    if (v) setAll(p => ({ ...p, [mode]: p[mode].map(e => e.id === id ? { ...e, text: v } : e) }));
+    setEditingId(null);
+  };
+
+  const handleWinner = (won) => setWinners(p => ({ ...p, [mode]: won }));
+  const handleRemove = (id)  => removeEntry(id);
 
   const copyEntries = () => {
     if (!copyFrom || copyFrom === mode) return;
     const cloned = (all[copyFrom] ?? []).map(e => ({ ...e, id: Date.now() + Math.random() }));
     setAll(p => ({ ...p, [mode]: [...(p[mode] ?? []), ...cloned] }));
-    setShowCopy(false);
-    setCopyFrom("");
+    setShowCopy(false); setCopyFrom("");
+  };
+
+  const shareUrl = () => {
+    const url = `${location.origin}${location.pathname}?m=${mode}&e=${encodeURIComponent(entries.map(e => e.text).join(","))}`;
+    navigator.clipboard.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2200); });
+  };
+
+  const importEntries = () => {
+    const items = importText.split(/[\n,]/).map(l => l.trim()).filter(Boolean)
+      .map(text => ({ id: Date.now() + Math.random(), text }));
+    setAll(p => ({ ...p, [mode]: [...(p[mode] ?? []), ...items] }));
+    setImportText(""); setShowImport(false);
   };
 
   return (
@@ -67,59 +122,107 @@ export default function App() {
         <Particles quantity={100} color="#6366f1" staticity={55} ease={65} size={0.75} />
       </div>
 
+      {/* Versteckter Dashboard-Link oben rechts */}
+      <button className="dashLink" onClick={onOpenDash} title="Dashboard öffnen">⊞</button>
+
       <div className="container">
-        {/* Header – kein MagicBento, kein Glow */}
         <header className="header">
           <h1 className="title">Glücksrad</h1>
-          <p className="subtitle">Einträge hinzufügen &amp; drehen</p>
+          <p className="subtitle">Leertaste oder Rad anklicken zum Drehen</p>
         </header>
 
-        {/* Modus-Tabs */}
-        <nav className="modeBar" aria-label="Modus wählen">
-          {MODES.map(m => (
-            <button
-              key={m.id}
-              className={`modeBtn${mode === m.id ? " active" : ""}`}
-              onClick={() => setMode(m.id)}
-            >
-              {m.label}
-            </button>
-          ))}
+        <nav className="modeBar">
+          {MODES.map(m => {
+            const count = (all[m.id] ?? []).length;
+            return (
+              <button key={m.id} className={`modeBtn${mode === m.id ? " active" : ""}`} onClick={() => setMode(m.id)}>
+                {m.label}
+                {count > 0 && <span className="modeCount">{count}</span>}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="mainLayout">
-          {/* Links – Einträge */}
+          {/* Links */}
           <aside className="leftPanel">
             <div className="card">
-              <span className="cardLabel">Einträge</span>
+              <div className="cardHeader">
+                <span className="cardLabel">Einträge</span>
+                {entries.length > 0 && <button className="clearBtn" onClick={clearAll}>Alle löschen</button>}
+              </div>
 
               <div className="inputRow">
                 <input
                   value={input}
-                  onChange={e => setInput(e.target.value)}
+                  onChange={e => { setInput(e.target.value); setDupWarn(false); }}
                   onKeyDown={e => e.key === "Enter" && addEntry()}
                   placeholder="Neuer Eintrag"
-                  aria-label="Neuer Eintrag"
+                  className={dupWarning ? "warnBorder" : ""}
                 />
                 <button onClick={addEntry}>+</button>
               </div>
 
-              {entries.length === 0
+              {dupWarning && <p className="dupWarn">Bereits vorhanden – nochmals Enter zum Hinzufügen.</p>}
+
+              <div className="rowActions">
+                <button className="textBtn" onClick={() => { setShowImport(p => !p); setShowCopy(false); }}>
+                  {showImport ? "Abbrechen" : "Text importieren"}
+                </button>
+                {entries.length > 0 && (
+                  <button className="textBtn" onClick={shareUrl}>
+                    {copied ? "✓ Kopiert" : "Link teilen"}
+                  </button>
+                )}
+              </div>
+
+              {showImport && (
+                <div className="importBox">
+                  <textarea
+                    value={importText}
+                    onChange={e => setImportText(e.target.value)}
+                    placeholder={"Komma- oder zeilengetrennt:\nPizza, Pasta\nSalat"}
+                    rows={4}
+                  />
+                  <button onClick={importEntries} disabled={!importText.trim()}>Importieren</button>
+                </div>
+              )}
+
+              {entries.length === 0 && !showImport
                 ? <p className="empty">Noch keine Einträge.</p>
                 : (
                   <ul className="list">
                     {entries.map((e, i) => (
                       <li key={e.id} className="item">
                         <span className="dot" style={{ background: (DOT_COLORS[mode] ?? DOT_COLORS.standard)[i % 6] }} />
-                        <span className="itemText">{e.text}</span>
-                        <button className="removeBtn" onClick={() => removeEntry(e.id)} aria-label="Entfernen">×</button>
+                        {editingId === e.id
+                          ? (
+                            <input
+                              className="editInput"
+                              value={editingText}
+                              onChange={ev => setEditingText(ev.target.value)}
+                              onKeyDown={ev => { if (ev.key === "Enter") commitEdit(e.id); if (ev.key === "Escape") setEditingId(null); }}
+                              onBlur={() => commitEdit(e.id)}
+                              autoFocus
+                            />
+                          ) : (
+                            <span
+                              className="itemText editable"
+                              onClick={() => { setEditingId(e.id); setEditingText(e.text); }}
+                              title="Klicken zum Bearbeiten"
+                            >
+                              {e.text}
+                            </span>
+                          )
+                        }
+                        <button className="removeBtn" onClick={() => removeEntry(e.id)}>×</button>
                       </li>
                     ))}
                   </ul>
                 )
               }
 
-              <button className="copyToggle" onClick={() => setShowCopy(p => !p)}>
+              <button className="copyToggle" onClick={() => { setShowCopy(p => !p); setShowImport(false); }}>
                 {showCopy ? "Abbrechen" : "Von anderem Rad kopieren"}
               </button>
 
@@ -128,7 +231,7 @@ export default function App() {
                   <select value={copyFrom} onChange={e => setCopyFrom(e.target.value)}>
                     <option value="">Rad wählen</option>
                     {MODES.filter(m2 => m2.id !== mode).map(m2 => (
-                      <option key={m2.id} value={m2.id}>{m2.label}</option>
+                      <option key={m2.id} value={m2.id}>{m2.label} ({(all[m2.id] ?? []).length})</option>
                     ))}
                   </select>
                   <button onClick={copyEntries} disabled={!copyFrom}>Übernehmen</button>
@@ -137,18 +240,12 @@ export default function App() {
             </div>
           </aside>
 
-          {/* Mitte – Rad */}
+          {/* Mitte */}
           <main className="centerPanel">
-            <Glücksrad
-              key={mode}
-              mode={mode}
-              entries={entries}
-              onWinner={handleWinner}
-              onRemoveWinner={handleRemove}
-            />
+            <Glücksrad key={mode} mode={mode} entries={entries} onWinner={handleWinner} onRemoveWinner={handleRemove} />
           </main>
 
-          {/* Rechts – Gewinner */}
+          {/* Rechts */}
           <aside className="rightPanel">
             <div className="card">
               <span className="cardLabel">Letzte Gewinner</span>
